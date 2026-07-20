@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Card Editor | Agent Card 编辑器</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --surface: #1a1f2e;
+    --surface2: #242b3d;
+    --border: #2d3548;
+    --text: #e1e4ea;
+    --text-secondary: #8b95a5;
+    --text-muted: #6b7488;
+    --green: #3fb950;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --yellow: #d29922;
+    --orange: #d4760e;
+    --purple: #a371f7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header h1 span { color: var(--blue); }
+  .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .btn:hover { border-color: var(--blue); }
+  .btn-primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #4f8edb; border-color: #4f8edb; }
+  .btn-danger { color: var(--red); }
+  .btn-danger:hover { border-color: var(--red); }
+  .lang-btn { background: var(--surface2); }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+
+  .main { display: grid; grid-template-columns: 1fr 480px; gap: 20px; }
+  @media (max-width: 1024px) { .main { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-section {
+    margin-bottom: 24px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .section-title { font-size: 16px; font-weight: 600; color: var(--blue); margin-bottom: 12px; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 12px; color: var(--text-secondary);
+    margin-bottom: 6px; font-weight: 500;
+  }
+  .field label .required { color: var(--red); margin-left: 2px; }
+  .field label .hint { color: var(--text-muted); font-weight: 400; margin-left: 4px; }
+  .field input[type="text"], .field input[type="url"], .field input[type="email"],
+  .field textarea, .field select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 9px 12px; color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
+  .field input.error, .field textarea.error { border-color: var(--red); }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .field .checkbox-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .field .checkbox-row label {
+    display: inline-flex; align-items: center; padding: 4px 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 16px; font-size: 12px; cursor: pointer; margin: 0;
+    color: var(--text-secondary); user-select: none;
+  }
+  .field .checkbox-row input { display: none; }
+  .field .checkbox-row label.active {
+    background: var(--blue); border-color: var(--blue); color: #fff;
+  }
+  .field .error-msg { color: var(--red); font-size: 12px; margin-top: 4px; display: none; }
+  .field.has-error .error-msg { display: block; }
+
+  .skills-list { display: flex; flex-direction: column; gap: 12px; }
+  .skill-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .skill-item .skill-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .skill-item .skill-num { font-size: 12px; color: var(--blue); font-weight: 600; }
+
+  .json-preview { position: sticky; top: 20px; }
+  .json-content {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 12.5px; line-height: 1.6; max-height: 70vh; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-word; color: var(--text);
+  }
+  .json-content .key { color: var(--blue); }
+  .json-content .string { color: var(--green); }
+  .json-content .number { color: var(--orange); }
+  .json-content .boolean { color: var(--purple); }
+  .json-content .null { color: var(--red); }
+
+  .validation { margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: 12px; }
+  .validation.ok { background: rgba(63,185,80,0.1); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .validation.err { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--green);
+    color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px);
+    transition: all 0.3s; pointer-events: none; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--red); }
+  .empty-skills {
+    text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;
+    border: 1px dashed var(--border); border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Agent</span> Card Editor <span style="color:var(--text-muted);font-size:14px;font-weight:400;margin-left:8px" id="subTitle">/ Agent Card 编辑器</span></h1>
+  <div class="header-actions">
+    <button class="btn" onclick="importFromJson()">Import JSON</button>
+    <button class="btn" onclick="resetForm()">Reset</button>
+    <button class="btn" onclick="loadExample()">Example</button>
+    <button class="btn lang-btn" onclick="toggleLang()">中文</button>
+    <button class="btn" onclick="copyJson()">Copy</button>
+    <button class="btn btn-primary" onclick="downloadJson()">Download .json</button>
+  </div>
+</div>
+<div class="subtitle" id="subtitleText">Visually design your A2A-compliant Agent Card with live JSON preview and validation.</div>
+
+<div class="main">
+  <div class="panel" id="formPanel">
+    <div class="form-section">
+      <div class="section-title" data-i18n="sectionBasic">Basic Info</div>
+      <div class="field">
+        <label>Name <span class="required">*</span><span class="hint" data-i18n="hintName">human-readable name</span></label>
+        <input type="text" id="f_name" oninput="update()">
+        <div class="error-msg" data-i18n="errRequired">This field is required</div>
+      </div>
+      <div class="field">
+        <label data-i18n="fDescription">Description</label>
+        <textarea id="f_description" oninput="update()"></textarea>
+      </div>
+      <div class="field">
+        <label>URL <span class="required">*</span><span class="hint" data-i18n="hintUrl">endpoint URL</span></label>
+        <input type="url" id="f_url" placeholder="https://example.com/agent" oninput="update()">
+        <div class="error-msg" data-i18n="errUrl">Must be a valid URL</div>
+      </div>
+      <div class="field">
+        <label data-i18n="fVersion">Version</label>
+        <input type="text" id="f_version" placeholder="1.0.0" oninput="update()">
+      </div>
+      <div class="field">
+        <label data-i18n="fIconUrl">Icon URL</label>
+        <input type="url" id="f_iconUrl" placeholder="https://..." oninput="update()">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title" data-i18n="sectionProvider">Provider</div>
+      <div class="field">
+        <label data-i18n="fOrgName">Organization name</label>
+        <input type="text" id="f_provider_org" oninput="update()">
+      </div>
+      <div class="field">
+        <label data-i18n="fOrgUrl">Organization URL</label>
+        <input type="url" id="f_provider_url" oninput="update()">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title" data-i18n="sectionCaps">Capabilities</div>
+      <div class="field">
+        <label data-i18n="fCaps">Supported features</label>
+        <div class="checkbox-row" id="f_capabilities">
+          <label><input type="checkbox" value="streaming" onchange="update()"><span data-i18n="capStreaming">streaming</span></label>
+          <label><input type="checkbox" value="pushNotifications" onchange="update()"><span data-i18n="capPush">pushNotifications</span></label>
+          <label><input type="checkbox" value="stateTransitionHistory" onchange="update()"><span data-i18n="capState">stateTransitionHistory</span></label>
+          <label><input type="checkbox" value="extensions" onchange="update()"><span data-i18n="capExt">extensions</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="fInputModes">Default input modes</label>
+        <div class="checkbox-row" id="f_inputModes">
+          <label><input type="checkbox" value="text" onchange="update()">text</label>
+          <label><input type="checkbox" value="file" onchange="update()">file</label>
+          <label><input type="checkbox" value="data" onchange="update()">data</label>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="fOutputModes">Default output modes</label>
+        <div class="checkbox-row" id="f_outputModes">
+          <label><input type="checkbox" value="text" onchange="update()">text</label>
+          <label><input type="checkbox" value="file" onchange="update()">file</label>
+          <label><input type="checkbox" value="data" onchange="update()">data</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title" data-i18n="sectionSkills">Skills</div>
+      <div id="skillsList" class="skills-list"></div>
+      <button class="btn" style="margin-top:8px" onclick="addSkill()">+ <span data-i18n="addSkill">Add skill</span></button>
+    </div>
+  </div>
+
+  <div class="panel json-preview">
+    <div class="panel-title" data-i18n="jsonPreview">JSON Preview</div>
+    <div class="json-content" id="jsonOutput"></div>
+    <div class="validation ok" id="validation" data-i18n="validOk">All fields valid</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG = {
+  en: {
+    subTitle: '/ Agent Card Editor',
+    subtitleText: 'Visually design your A2A-compliant Agent Card with live JSON preview and validation.',
+    sectionBasic: 'Basic Info', sectionProvider: 'Provider', sectionCaps: 'Capabilities', sectionSkills: 'Skills',
+    hintName: 'human-readable name', hintUrl: 'endpoint URL',
+    fDescription: 'Description', fVersion: 'Version', fIconUrl: 'Icon URL',
+    fOrgName: 'Organization name', fOrgUrl: 'Organization URL',
+    fCaps: 'Supported features', capStreaming: 'streaming', capPush: 'pushNotifications', capState: 'stateTransitionHistory', capExt: 'extensions',
+    fInputModes: 'Default input modes', fOutputModes: 'Default output modes',
+    addSkill: 'Add skill', jsonPreview: 'JSON Preview',
+    errRequired: 'This field is required', errUrl: 'Must be a valid URL',
+    validOk: 'All fields valid', validErr: 'Some fields are invalid',
+    skillId: 'Skill ID', skillName: 'Skill name', skillDesc: 'Description', skillExamples: 'Example prompts (one per line)',
+    skillInput: 'Input modes (override)', skillOutput: 'Output modes (override)',
+    noSkills: 'No skills yet. Click "Add skill" to get started.',
+    remove: 'Remove', import: 'Import JSON', reset: 'Reset', example: 'Example',
+    copy: 'Copy', download: 'Download .json', lang: '中文',
+    copied: 'Copied to clipboard!', imported: 'Imported!', resetDone: 'Form reset', loaded: 'Example loaded',
+    errImport: 'Invalid JSON',
+  },
+  zh: {
+    subTitle: '/ Agent Card 编辑器',
+    subtitleText: '可视化设计符合 A2A 规范的 Agent Card，实时预览 JSON 并校验。',
+    sectionBasic: '基本信息', sectionProvider: '提供方', sectionCaps: '能力', sectionSkills: '技能',
+    hintName: '可读名称', hintUrl: 'Agent 端点 URL',
+    fDescription: '描述', fVersion: '版本', fIconUrl: '图标 URL',
+    fOrgName: '组织名称', fOrgUrl: '组织 URL',
+    fCaps: '支持的能力', capStreaming: '流式响应', capPush: '推送通知', capState: '状态历史', capExt: '扩展',
+    fInputModes: '默认输入模式', fOutputModes: '默认输出模式',
+    addSkill: '添加技能', jsonPreview: 'JSON 预览',
+    errRequired: '此项为必填', errUrl: '必须是合法 URL',
+    validOk: '所有字段有效', validErr: '部分字段不合法',
+    skillId: '技能 ID', skillName: '技能名称', skillDesc: '描述', skillExamples: '示例输入（每行一个）',
+    skillInput: '输入模式（覆盖）', skillOutput: '输出模式（覆盖）',
+    noSkills: '还没有技能。点击"添加技能"开始。',
+    remove: '删除', import: '导入 JSON', reset: '重置', example: '示例',
+    copy: '复制', download: '下载 .json', lang: 'EN',
+    copied: '已复制到剪贴板！', imported: '已导入！', resetDone: '已重置', loaded: '已加载示例',
+    errImport: 'JSON 格式错误',
+  }
+};
+
+let lang = 'en';
+let skillCount = 0;
+
+function t(key) { return LANG[lang][key] || key; }
+
+function toggleLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  localStorage.setItem('ace-lang', lang);
+  applyLang();
+}
+
+function detectLang() {
+  const stored = localStorage.getItem('ace-lang');
+  if (stored) return stored;
+  return navigator.language.startsWith('zh') ? 'zh' : 'en';
+}
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (LANG[lang][k]) el.textContent = LANG[lang][k];
+  });
+  document.querySelector('.lang-btn').textContent = LANG[lang].lang;
+  document.getElementById('subTitle').textContent = LANG[lang].subTitle;
+  document.getElementById('subtitleText').textContent = LANG[lang].subtitleText;
+  update();
+}
+
+function addSkill(skill) {
+  skillCount++;
+  const id = skillCount;
+  const list = document.getElementById('skillsList');
+  const div = document.createElement('div');
+  div.className = 'skill-item';
+  div.id = `skill_${id}`;
+  div.innerHTML = `
+    <div class="skill-header">
+      <div class="skill-num">Skill #${id}</div>
+      <button class="btn btn-danger" onclick="removeSkill(${id})">${LANG[lang].remove}</button>
+    </div>
+    <div class="field">
+      <label>${LANG[lang].skillId}</label>
+      <input type="text" class="s_id" value="${skill?.id || ''}" oninput="update()">
+    </div>
+    <div class="field">
+      <label>${LANG[lang].skillName}</label>
+      <input type="text" class="s_name" value="${skill?.name || ''}" oninput="update()">
+    </div>
+    <div class="field">
+      <label>${LANG[lang].skillDesc}</label>
+      <textarea class="s_description" oninput="update()">${skill?.description || ''}</textarea>
+    </div>
+    <div class="field">
+      <label>${LANG[lang].skillExamples}</label>
+      <textarea class="s_examples" oninput="update()">${(skill?.examples || []).join('\n')}</textarea>
+    </div>
+  `;
+  if (list.querySelector('.empty-skills')) {
+    list.innerHTML = '';
+  }
+  list.appendChild(div);
+  update();
+}
+
+function removeSkill(id) {
+  const el = document.getElementById(`skill_${id}`);
+  if (el) el.remove();
+  if (document.getElementById('skillsList').children.length === 0) {
+    document.getElementById('skillsList').innerHTML = `<div class="empty-skills">${LANG[lang].noSkills}</div>`;
+  }
+  update();
+}
+
+function buildCard() {
+  const card = {};
+  const name = document.getElementById('f_name').value.trim();
+  const url = document.getElementById('f_url').value.trim();
+  const description = document.getElementById('f_description').value.trim();
+  const version = document.getElementById('f_version').value.trim();
+  const iconUrl = document.getElementById('f_iconUrl').value.trim();
+  if (name) card.name = name;
+  if (description) card.description = description;
+  if (url) card.url = url;
+  if (version) card.version = version;
+  if (iconUrl) card.iconUrl = iconUrl;
+
+  const orgName = document.getElementById('f_provider_org').value.trim();
+  const orgUrl = document.getElementById('f_provider_url').value.trim();
+  if (orgName || orgUrl) {
+    card.provider = {};
+    if (orgName) card.provider.organization = orgName;
+    if (orgUrl) card.provider.url = orgUrl;
+  }
+
+  const caps = getChecked('f_capabilities');
+  if (caps.length) card.capabilities = caps;
+  const inputModes = getChecked('f_inputModes');
+  if (inputModes.length) card.defaultInputModes = inputModes;
+  const outputModes = getChecked('f_outputModes');
+  if (outputModes.length) card.defaultOutputModes = outputModes;
+
+  const skills = [];
+  document.querySelectorAll('.skill-item').forEach(s => {
+    const sk = {};
+    const id = s.querySelector('.s_id').value.trim();
+    const nm = s.querySelector('.s_name').value.trim();
+    const desc = s.querySelector('.s_description').value.trim();
+    const examples = s.querySelector('.s_examples').value.split('\n').map(e => e.trim()).filter(Boolean);
+    if (id) sk.id = id;
+    if (nm) sk.name = nm;
+    if (desc) sk.description = desc;
+    if (examples.length) sk.examples = examples;
+    if (Object.keys(sk).length) skills.push(sk);
+  });
+  if (skills.length) card.skills = skills;
+
+  return card;
+}
+
+function getChecked(containerId) {
+  const values = [];
+  document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach(cb => {
+    if (cb.checked) values.push(cb.value);
+  });
+  return values;
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    let cls = 'number';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) cls = 'key';
+      else cls = 'string';
+    } else if (/true|false/.test(match)) {
+      cls = 'boolean';
+    } else if (/null/.test(match)) {
+      cls = 'null';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
+}
+
+function validate() {
+  let ok = true;
+  document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
+  const name = document.getElementById('f_name').value.trim();
+  const url = document.getElementById('f_url').value.trim();
+  if (!name) { ok = false; document.getElementById('f_name').parentElement.classList.add('has-error'); }
+  if (url) {
+    try { new URL(url); } catch (_) { ok = false; document.getElementById('f_url').parentElement.classList.add('has-error'); }
+  } else {
+    ok = false; document.getElementById('f_url').parentElement.classList.add('has-error');
+  }
+  return ok;
+}
+
+function update() {
+  const card = buildCard();
+  const json = JSON.stringify(card, null, 2);
+  document.getElementById('jsonOutput').innerHTML = syntaxHighlight(json);
+  const valid = validate();
+  const v = document.getElementById('validation');
+  v.className = 'validation ' + (valid ? 'ok' : 'err');
+  v.textContent = valid ? LANG[lang].validOk : LANG[lang].validErr;
+}
+
+function copyJson() {
+  const card = buildCard();
+  const json = JSON.stringify(card, null, 2);
+  navigator.clipboard.writeText(json).then(() => showToast(LANG[lang].copied));
+}
+
+function downloadJson() {
+  const card = buildCard();
+  const json = JSON.stringify(card, null, 2);
+  const name = (card.name || 'agent').toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${name}-agent-card.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importFromJson() {
+  const json = prompt(LANG[lang].import + ' (paste JSON here):');
+  if (!json) return;
+  try {
+    const card = JSON.parse(json);
+    fillForm(card);
+    showToast(LANG[lang].imported);
+  } catch (_) {
+    showToast(LANG[lang].errImport, true);
+  }
+}
+
+function fillForm(card) {
+  document.getElementById('f_name').value = card.name || '';
+  document.getElementById('f_description').value = card.description || '';
+  document.getElementById('f_url').value = card.url || '';
+  document.getElementById('f_version').value = card.version || '';
+  document.getElementById('f_iconUrl').value = card.iconUrl || '';
+  document.getElementById('f_provider_org').value = card.provider?.organization || '';
+  document.getElementById('f_provider_url').value = card.provider?.url || '';
+  setChecked('f_capabilities', card.capabilities || []);
+  setChecked('f_inputModes', card.defaultInputModes || []);
+  setChecked('f_outputModes', card.defaultOutputModes || []);
+  document.getElementById('skillsList').innerHTML = '';
+  skillCount = 0;
+  (card.skills || []).forEach(s => addSkill(s));
+  if (!card.skills || !card.skills.length) {
+    document.getElementById('skillsList').innerHTML = `<div class="empty-skills">${LANG[lang].noSkills}</div>`;
+  }
+  update();
+}
+
+function setChecked(containerId, values) {
+  const valueSet = new Set(values);
+  document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach(cb => {
+    cb.checked = valueSet.has(cb.value);
+    cb.parentElement.classList.toggle('active', cb.checked);
+  });
+}
+
+document.addEventListener('change', (e) => {
+  if (e.target.matches('.checkbox-row input[type="checkbox"]')) {
+    e.target.parentElement.classList.toggle('active', e.target.checked);
+  }
+});
+
+function resetForm() {
+  document.querySelectorAll('input[type="text"], input[type="url"], input[type="email"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false; cb.parentElement.classList.remove('active');
+  });
+  document.getElementById('skillsList').innerHTML = `<div class="empty-skills">${LANG[lang].noSkills}</div>`;
+  skillCount = 0;
+  update();
+  showToast(LANG[lang].resetDone);
+}
+
+function loadExample() {
+  fillForm({
+    name: 'Example Agent',
+    description: 'A demo agent that helps with data analysis and visualization',
+    url: 'https://api.example.com/agent',
+    version: '1.0.0',
+    iconUrl: 'https://example.com/icon.png',
+    provider: { organization: 'Example Corp', url: 'https://example.com' },
+    capabilities: ['streaming', 'pushNotifications'],
+    defaultInputModes: ['text', 'file'],
+    defaultOutputModes: ['text', 'data'],
+    skills: [
+      { id: 'data-analysis', name: 'Data Analysis', description: 'Analyze datasets and produce statistical summaries', examples: ['Analyze sales data for Q3', 'Find outliers in this CSV'] },
+      { id: 'chart-generation', name: 'Chart Generation', description: 'Generate visualizations from data', examples: ['Plot revenue over time', 'Create a pie chart of categories'] },
+    ],
+  });
+  showToast(LANG[lang].loaded);
+}
+
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 2000);
+}
+
+lang = detectLang();
+document.getElementById('skillsList').innerHTML = `<div class="empty-skills">${LANG[lang].noSkills}</div>`;
+applyLang();
+</script>
+</body>
+</html>
