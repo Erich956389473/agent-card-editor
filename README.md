@@ -3,6 +3,10 @@
 > Visually design A2A-compliant Agent Cards with live JSON preview.
 > 可视化设计符合 A2A 规范的 Agent Card，实时预览 JSON。
 
+[![CI](https://github.com/Erich956389473/agent-card-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/Erich956389473/agent-card-editor/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/agent-card-editor)](https://www.npmjs.com/package/agent-card-editor)
+
 A web-based editor for creating [A2A Protocol](https://github.com/a2a-ai/A2A) Agent Cards without writing JSON by hand. Fill in forms, see the JSON update in real-time, validate, and export.
 
 一个用于创建 [A2A 协议](https://github.com/a2a-ai/A2A) Agent Card 的 Web 编辑器，不用手写 JSON。填表 → 实时预览 → 校验 → 导出。

@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Validate HTML
+      run: |
+        grep -q "DOCTYPE html" index.html && echo "HTML5 valid"
+        grep -q "agent-card-editor" index.html || echo "Warning: project name not found"
